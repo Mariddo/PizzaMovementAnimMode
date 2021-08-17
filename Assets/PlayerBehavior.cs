@@ -63,6 +63,9 @@ public class PlayerBehavior : MonoBehaviour
     //turnSpeedMod:  We need this for making the player slow down as they begin to commit to their turn.
     public float turnSpeedMod;
 
+    [Header ("Slowing Down")]
+    public bool slowdown;
+
     void Awake()
     {
         playerActionControls = new PlayerActionControls();
@@ -94,7 +97,7 @@ public class PlayerBehavior : MonoBehaviour
 
         turning = false;
         hiSpeedTurn = false;
-        turnInProgress = false;
+        turnInProgress = slowdown = false;
 
         turnSpeedMod = 1.0f;
     }
@@ -216,6 +219,22 @@ public class PlayerBehavior : MonoBehaviour
 
             rb.velocity = new Vector2(determinedSpeed * direction * turnSpeedMod * turnDiagonal, rb.velocity.y);
         }
+        else if(slowdown)
+        {
+            if(gear > 0 && gear < gearSpeeds.Length)
+            {
+                determinedSpeed = gearSpeeds[gear-1];
+            }
+            else
+            {
+                determinedSpeed = walkSpeed;
+            }
+            
+            rb.velocity = new Vector2(determinedSpeed * direction * turnSpeedMod, rb.velocity.y);
+
+
+
+        }
         else if(dashInput == 0 && moveInput == 0)
         {
             rb.velocity = new Vector2(0, rb.velocity.y);
@@ -244,9 +263,7 @@ public class PlayerBehavior : MonoBehaviour
     void Jump() {
 
 
-
-
-        if (jumpInput != 0 && (isGrounded || Time.time - lastTimeGrounded <= rememberGroundedFor || additionalJumps > 0)) {
+        if (jumpInput != 0 && (isGrounded || Time.time - lastTimeGrounded <= rememberGroundedFor || additionalJumps > 0) && !turnInProgress && !slowdown) {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             additionalJumps--;
         }
